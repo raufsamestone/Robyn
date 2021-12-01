@@ -55,7 +55,7 @@ robyn = r.Robyn(country="DE",
 df = pd.read_csv('source/de_simulated_data.csv')
 
 # Step 3: USER SET HYPERPARAMETER BOUNDS
-# status: #TODO needs to be implemented
+# status: # TODO needs to be implemented
 robyn.set_param_bounds()
 
 # Step 4: PREPARE DATA FOR MODELING
