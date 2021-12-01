@@ -33,7 +33,7 @@ robyn.mod
 robyn.refit(x_train=robyn.test_x_train,
             y_train=robyn.test_y_train,
             lambda_=robyn.test_lambda_,
-            lower_limits=robyn.test_lower_limits,è
+            lower_limits=robyn.test_lower_limits,
             upper_limits=robyn.test_upper_limits)
 
 # See the class variable that was just updated
@@ -45,8 +45,11 @@ robyn.mod
 
 # Step 1: INITIALIZE OBJECT
 # status: working version
-robyn = r.Robyn(country="DE", dateVarName='Date', depVarName='revenue'
-                , mediaVarName=["tv_S", "ooh_S", "print_S", "facebook_I", "search_clicks_P"])
+robyn = r.Robyn(country="DE",
+                dateVarName='Date',
+                depVarName='revenue',
+                mediaVarName=["tv_S", "ooh_S", "print_S", "facebook_I", "search_clicks_P"]
+                )
 
 # Step 2: IMPORT DATA SET FOR PREDICTIONS
 df = pd.read_csv('source/de_simulated_data.csv')

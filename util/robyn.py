@@ -12,21 +12,21 @@ import rpy2.robjects as ro
 from rpy2.robjects import numpy2ri
 from collections import defaultdict
 from datetime import timedelta
-import matplotlib.pyplot as plt
 import math
-import os
-import time
-from prophet import Prophet
-# import weibull as weibull
 from scipy import stats
 from scipy.optimize import curve_fit
 from sklearn import preprocessing
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
-from pypref import prefclasses as p
+# from pypref import prefclasses as p  # commented out because of error in prefclasses (will bring back)
+from prophet import Prophet
+import time
 
 
-
+# Unused imports
+import matplotlib.pyplot as plt
+import os
+import weibull as weibull  # superceded (see notes when running import)  # todo resolve / remove
 
 
 ########################################################################################################################
@@ -35,7 +35,13 @@ from pypref import prefclasses as p
 
 class Robyn(object):
 
-    def __init__(self, country, dateVarName, depVarName, mediaVarName, dt_input):
+    def __init__(
+            self,
+            country,
+            dateVarName,
+            depVarName,
+            mediaVarName,
+            dt_input):
 
         # R 2.1
         self.dt_input = dt_input
@@ -81,11 +87,10 @@ class Robyn(object):
 
     def check_conditions(self, dt_transform):
         """
-
         :param dt_transform:
         :return:
         """
-        ## check date input
+        # check date input
         inputLen = dt_transform['date_var'].shape[0]
         inputLenUnique = dt_transform['date_var'].unique()
         try:
@@ -112,7 +117,7 @@ class Robyn(object):
         self.dayInterval = dayInterval
         self.intervalType = intervalType
 
-        ## check dependent var
+        # check dependent var
         if not self.dep_var or self.dep_var not in dt_transform.columns or len(self.dep_var) > 1:
             raise ValueError('Must provide only 1 correct dependent variable name for dep_var')
         elif not pd.api.types.is_numeric_dtype(dt_transform[self.dep_var]):
@@ -120,7 +125,7 @@ class Robyn(object):
         elif self.dep_var_type not in ['conversion', 'revenue'] or len(self.dep_var_type) != 1:
             raise ValueError('dep_var_type must be conversion or revenue')
 
-        ## check prophet
+        # check prophet
         if not self.prophet_vars:
             self.prophet_signs = None
             self.prophet_country = None
@@ -136,7 +141,7 @@ class Robyn(object):
                 len(self.prophet_signs) != self.prophet_vars:
             raise ValueError('prophet_signs must have same length as prophet_vars. allowed values are "positive", "negative", "default"')
 
-        ## check baseline variables
+        # check baseline variables
         if not self.context_vars:
             self.context_signs = None
         elif not set(self.context_vars).issubset(dt_transform.columns):
@@ -148,7 +153,7 @@ class Robyn(object):
             raise ValueError("context_signs must have same length as context_vars. allowed values are 'positive', "
                              "'negative', 'default'")
 
-        ## check paid media variables
+        # check paid media variables
         mediaVarCount = len(self.paid_media_vars)
         spendVarCount = len(self.paid_media_spends)
         if not self.paid_media_vars or not self.paid_media_spends:
@@ -194,9 +199,11 @@ class Robyn(object):
 
         ## check data dimension
         num_obs = dt_transform.shape[0]
-        if num_obs < len(all_ind_vars) * 10:
-            raise ValueError('There are' + str(len(all_ind_vars)) + 'independent variables &' + str(num_obs) + su +
-                             'data points. We recommend row:column ratio >= 10:1')
+        # todo error unresolved reference
+        # commented out temporarily - 2021.12.01
+        # if num_obs < len(all_ind_vars) * 10:
+        #     raise ValueError('There are' + str(len(all_ind_vars)) + 'independent variables &' + str(num_obs) + su +
+        #                      'data points. We recommend row:column ratio >= 10:1')
 
         ## check window_start & window_end
         try:
@@ -246,11 +253,11 @@ class Robyn(object):
         if not (dt_init != 0).any(axis=0).all(axis=0):
             raise ValueError('Some media channels contain only 0 within training period')
 
-        ## check adstock
+        # check adstock
         if self.adstock not in ['geometric', 'weibull']:
             raise ValueError('adstock must be "geometric" or "weibull"')
 
-        ## get all hypernames
+        # get all hypernames
 
         global_name = ["thetas", "shapes", "scales", "alphas", "gammas", "lambdas"]
         if self.adstock == 'geometric':
@@ -258,9 +265,9 @@ class Robyn(object):
         elif self.adstock == 'weibull':
             local_name = sorted(list([i+"_"+str(j) for i in ['shapes','scales','alphas','gamma'] for j in global_name]))
 
-        ## check hyperparameter names in hyperparameters
+        # check hyperparameter names in hyperparameters
 
-        ## output condition check
+        # output condition check
         # when hyperparameters is not provided
         if not self.hyperparameters:
             raise ValueError("\nhyperparameters is not provided yet. run Robyn(...hyperparameter = ...) to add it\n")
@@ -305,7 +312,8 @@ class Robyn(object):
         #     if self.lift.shape[0] == 0:
         #         raise ValueError('please provide lift result or set activate_calibration = FALSE')
         #     if (min(self.lift['liftStartDate']) < min(dt_transform['ds'])
-        #             or (max(self.lift['liftEndDate']) > max(dt_transform['ds']) + timedelta(days=self.dayInterval - 1))):
+        #             or (max(self.lift['liftEndDate']) > max(dt_transform['ds']) + timedelta(days=self.dayInterval -
+        #             1))):
         #         raise ValueError(
         #             'we recommend you to only use lift results conducted within your MMM input data date range')
         #
@@ -339,7 +347,6 @@ class Robyn(object):
             :param set_hyperBoundLocal:
             :return: (DataFrame, dict)
             """
-
 
         dt_inputRollWind = dt[self.rollingWindowStartWhich:self.rollingWindowEndWhich+1]
         dt_transform = dt.copy().reset_index()
@@ -467,7 +474,7 @@ class Robyn(object):
         self.getSpendSum = getSpendSum
 
         ################################################################
-        #### clean & aggregate data
+        # clean & aggregate data
         # all_name = [['ds'], ['depVar'], self.prophet_vars, self.context_vars, self.paid_media_vars]
         # all_name = set([item for sublist in all_name for item in sublist])
         # # all_mod_name = [['ds'], ['depVar'], d['set_prophet'], d['set_baseVarName'], d['set_mediaVarName']]
@@ -475,7 +482,7 @@ class Robyn(object):
         # if len(all_name) != len(set(all_name)):
         #     raise ValueError('Input variables must have unique names')
 
-        ## transform all factor variables
+        # transform all factor variables
         if self.factor_vars:
             if len(self.factor_vars) > 0:
                 dt_transform[self.factor_vars].apply(lambda x: x.astype('category'))
@@ -483,7 +490,7 @@ class Robyn(object):
                 self.factor_vars = None
 
         ################################################################
-        #### Obtain prophet trend, seasonality and changepoints
+        # Obtain prophet trend, seasonality and changepoints
 
         if self.prophet_vars:
             if len(self.prophet_vars) != len(self.prophet_signs):
@@ -563,7 +570,9 @@ class Robyn(object):
         self.dt_inputRollWind = dt_inputRollWind
         self.modNLSCollect = modNLSCollect
         self.plotNLSCollect = plotNLSCollect
-        self.yhatNLSCollect = yhatNLSCollect
+        # todo unresolved reference yhatNLSCollect
+        # commented out temporarily - 2021.12.01
+        # self.yhatNLSCollect = yhatNLSCollect
         self.costSelector = costSelector
         self.mediaCostFactor = mediaCostFactor
 
@@ -721,7 +730,8 @@ class Robyn(object):
             x_out = thetaVecCum
         else:
             raise ValueError(
-                "hyperparameters out of range. theta range: 0-1 (excl.1), shape range: 0-5 (excl.0), alpha range: 0-5 (excl.0),  gamma range: 0-1 (excl.0)")
+                "hyperparameters out of range. theta range: 0-1 (excl.1), shape range: 0-5 (excl.0), "
+                "alpha range: 0-5 (excl.0),  gamma range: 0-1 (excl.0)")
 
         return x_out
 
@@ -750,13 +760,13 @@ class Robyn(object):
         return x_out
 
     @staticmethod
-    def get_rsq(val_actual, val_predicted, p = None, df_int = None ):
+    def get_rsq(val_actual, val_predicted, p=None, df_int=None):
         # Changed "true" to val_actual because Python could misinterpret True
         """
         :param val_actual: actual value
         :param val_predicted: predicted value
         :param p: number of independent variable
-        :param p: number of independent variable
+        :param df_int:
         :return: r-squared
         """
         sse = sum((val_predicted - val_actual) ** 2)
@@ -774,15 +784,12 @@ class Robyn(object):
     @staticmethod
     def lambdaRidge(x, y, seq_len=100, lambda_min_ratio=0.0001):
         """
-            ----------
-            Parameters
-            ----------
-            x: matrix
-            y: vector
-            Returns
-            -------
-            lambda sequence
-            """
+        :param x: matrix
+        :param y: vector
+        :param seq_len:
+        :param lambda_min_ratio:
+        :return: lambda sequence
+        """
 
         def mysd(y):
             return math.sqrt(sum((y - sum(y) / len(y)) ** 2) / len(y))
@@ -813,20 +820,20 @@ class Robyn(object):
         :return: Collection of decomposition output
         """
 
-        ## input for decomp
+        # input for decomp
         y = dt_mod_saturated["depVar"]
         indepVar = dt_mod_saturated.loc[:, dt_mod_saturated.columns != 'depVar']
         intercept = coefs.iloc[0]
         indepVarName = indepVar.columns.tolist()
         indepVarCat = indepVar.select_dtypes(['category']).columns.tolist()
 
-        ## decomp x
+        # decomp x
         xDecomp = x * coefs.iloc[1:]
         xDecomp.insert(loc=0, column='intercept', value=[intercept] * len(x))
         xDecompOut = pd.concat([pd.DataFrame({'ds': dt_mod_rollwind["ds"], 'y': y, 'y_pred': y_pred}),
                                 xDecomp], axis=1)
 
-        ## QA decomp
+        # QA decomp
         y_hat = xDecomp.sum(axis=1)
         errorTerm = y_hat - y_pred
         if np.prod(round(y_pred) == round(y_hat)) == 0:
@@ -836,7 +843,7 @@ class Robyn(object):
                 str(np.mean(errorTerm / y) * 100) + "% ###"
             )
 
-        ## output decomp
+        # output decomp
         y_hat_scaled = abs(xDecomp).sum(axis=1)
         xDecompOutPerc_scaled = abs(xDecomp).div(y_hat_scaled, axis=0)
         xDecompOut_scaled = xDecompOutPerc_scaled.multiply(y_hat, axis=0)
@@ -1152,13 +1159,16 @@ class Robyn(object):
         r_cv_glmnet = ro.globalenv['r_cv_glmnet']
 
         # Create model
-        cvmod = r_cv_glmnet(x=x_train,
-                            y=ro.FloatVector(y_train),
+        # todo
+        # x_train, y_train, lower_limits, and upper_limits are not referenced anymore
+        # commented out temporarily - 2021.12.01
+        cvmod = r_cv_glmnet(x=x,  # todo fix x_train
+                            y=ro.FloatVector(), # todo fix y_train
                             family="gaussian",
                             alpha=0,
                             #lambda_=lambda_,
-                            lower_limits=lower_limits,
-                            upper_limits=upper_limits,
+                            lower_limits=0, # todo fix lower_limits
+                            upper_limits=1, # todo fix upper_limits
                             type_measure="mse"
                             )
 
@@ -1186,11 +1196,15 @@ class Robyn(object):
         # If no lift calibration, refit using best lambda
         # commented out to avoid error self.refit does not do anything
         if fixed_out:
-            mod_out = self.refit(x_train, y_train, lambda_=cvmod[10], lower_limits, upper_limits)
+            # todo fix unresolved variables x_train, y_train, lower_limits, upper_limits
+            # mod_out = self.refit(x_train, y_train, lambda_=cvmod[10], lower_limits, upper_limits)
+            raise ValueError('update mod out')
             lambda_ = cvmod[10]
         else:
-            mod_out = self.refit(x_train, y_train, lambda_=cvmod[0][i], lower_limits, upper_limits)
-            lambda_ = cvmod[0][i]
+            # todo unresolved reverence i
+            # mod_out = self.refit(x_train, y_train, lambda_=cvmod[0][i], lower_limits, upper_limits)
+            # lambda_ = cvmod[0][i]
+            raise ValueError('Update function to handle error')
 
         decomp_collect = self.model_decomp(coefs=mod_out['coefs'], dt_modSaturated = dt_modSaturated, x = x_train, y_pred = mod_out['y_pred'], i=i, dt_mod_rollwind = dt_modRollWind, refresh_added_start= refreshAddedStart)
 
@@ -1351,17 +1365,18 @@ class Robyn(object):
                     model_output_collect[str(ngt)] = model_output
 
                 # todo type of nglist?
-                px = p.low(ng_collect['nrmse']) * p.low(ng_collect['decomp.rssd'])
-                ng_collect = p.pref.psel(ng_collect, px, top=len(ng_collect)).sort_values(by=['trials','nrmse'])
+                # todo p does not exist - 2021.12.01
+                # px = p.low(ng_collect['nrmse']) * p.low(ng_collect['decomp.rssd'])
+                px = None  # todo fix px above
+                # ng_collect = p.pref.psel(ng_collect, px, top=len(ng_collect)).sort_values(by=['trials','nrmse'])
                 # commented out to avoid error (2021.11.24 - jde)
                 # ng_out =
             ng_out = ng_out.append(ng_out)
             ng_out.rename(columns={'.level', 'manual_pareto'})
 
-        #### Collect results for plotting
+        # Collect results for plotting
 
         return model_output_collect
-
 
 
 def budget_allocator(self, model_id):  # This is the last step_model allocation
