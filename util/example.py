@@ -6,7 +6,8 @@
 ########################################################################################################################
 # IMPORTS
 import pandas as pd
-from python.robyn_v02 import robyn as r
+# from python.robyn_v02 import robyn as r  # is this still referencing anything anymore
+import util.robyn as r
 
 # FOR TESTING
 import importlib as il
@@ -32,7 +33,7 @@ robyn.mod
 robyn.refit(x_train=robyn.test_x_train,
             y_train=robyn.test_y_train,
             lambda_=robyn.test_lambda_,
-            lower_limits=robyn.test_lower_limits,
+            lower_limits=robyn.test_lower_limits,è
             upper_limits=robyn.test_upper_limits)
 
 # See the class variable that was just updated

@@ -195,7 +195,7 @@ class Robyn(object):
         ## check data dimension
         num_obs = dt_transform.shape[0]
         if num_obs < len(all_ind_vars) * 10:
-            raise ValueError('There are' + str(len(all_ind_vars)) + 'independent variables &' + str(num_obs) +
+            raise ValueError('There are' + str(len(all_ind_vars)) + 'independent variables &' + str(num_obs) + su +
                              'data points. We recommend row:column ratio >= 10:1')
 
         ## check window_start & window_end
@@ -1115,7 +1115,7 @@ class Robyn(object):
         #####################################
         # Get hyperparameter sample
 
-        # Tranform media with hyperparameters
+        # Transform media with hyperparameters
 
         #####################################
         # Split and prepare data for modelling
@@ -1184,6 +1184,7 @@ class Robyn(object):
 
 
         # If no lift calibration, refit using best lambda
+        # commented out to avoid error self.refit does not do anything
         if fixed_out:
             mod_out = self.refit(x_train, y_train, lambda_=cvmod[10], lower_limits, upper_limits)
             lambda_ = cvmod[10]
@@ -1200,8 +1201,8 @@ class Robyn(object):
         #####################################
         # Get calibration mape
 
-        if self.activate_calibration:
-
+        # commented out to avoid error (2021.11.24 - jde)
+        # if self.activate_calibration:
 
 
         #####################################
@@ -1352,7 +1353,8 @@ class Robyn(object):
                 # todo type of nglist?
                 px = p.low(ng_collect['nrmse']) * p.low(ng_collect['decomp.rssd'])
                 ng_collect = p.pref.psel(ng_collect, px, top=len(ng_collect)).sort_values(by=['trials','nrmse'])
-                ng_out =
+                # commented out to avoid error (2021.11.24 - jde)
+                # ng_out =
             ng_out = ng_out.append(ng_out)
             ng_out.rename(columns={'.level', 'manual_pareto'})
 
